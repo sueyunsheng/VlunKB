@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}目录总览 - VulnKB{% endblock %}
+
+{% block content %}
+<!-- 搜索栏 -->
+<form method="GET" action="/" class="mb-5">
+    <div class="flex gap-2">
+        <input type="text" name="q" value="{{ q }}" placeholder="搜索目录名称..."
+               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <button type="submit"
+                class="px-5 py-2 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 transition shadow-sm">
+            搜索
+        </button>
+    </div>
+</form>
+
+{% if categories|length == 0 %}
+<div class="text-center py-20">
+    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/>
+    </svg>
+    <p class="text-gray-400 text-sm mb-3">还没有任何目录</p>
+    <a href="/category/new" class="inline-block text-sm text-indigo-600 hover:text-indigo-500 font-medium">创建第一个目录 &rarr;</a>
+</div>
+{% else %}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for cat in categories %}
+    <a href="/category/{{ cat.id }}"
+       class="group block bg-white rounded-xl shadow-sm hover:shadow-md transition p-5 border border-transparent hover:border-indigo-200">
+        <div class="flex items-start gap-3">
+            <div class="bg-indigo-50 text-indigo-600 rounded-lg p-2.5 group-hover:bg-indigo-100 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h2 class="text-base font-semibold text-gray-800 truncate">{{ cat.name }}</h2>
+                {% if cat.description %}
+                <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ cat.description }}</p>
+                {% endif %}
+                <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                    <span>{{ cat.patterns|length }} 篇文章</span>
+                    <span>{{ cat.updated_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  vulnkb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vulnkb
+    restart: unless-stopped
+    # 不对外暴露端口，仅通过 Docker 内部网络供 Nginx 访问
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+
+  nginx:
+    image: nginx:alpine
+    container_name: vulnkb-nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTPS_PORT:-6868}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - vulnkb
+    environment:
+      - TZ=Asia/Shanghai

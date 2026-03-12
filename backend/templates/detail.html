@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ pattern.title }} - VulnKB{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+    <!-- 面包屑 + 操作栏 -->
+    <div class="flex items-center justify-between mb-4">
+        <nav class="flex items-center text-sm text-gray-500 space-x-2 min-w-0">
+            <a href="/" class="hover:text-indigo-600 transition shrink-0">首页</a>
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <a href="/category/{{ pattern.category.id }}" class="hover:text-indigo-600 transition shrink-0">{{ pattern.category.name }}</a>
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-gray-800 font-medium truncate">{{ pattern.title }}</span>
+        </nav>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="/pattern/{{ pattern.id }}/edit" class="text-xs px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition">编辑</a>
+            <form method="POST" action="/pattern/{{ pattern.id }}/delete" onsubmit="return confirm('确认删除此条目？')">
+                <button type="submit" class="text-xs px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-md transition">删除</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 文章 -->
+    <article class="bg-white rounded-xl shadow-sm p-6">
+        <header class="mb-5">
+            <h1 class="text-2xl font-bold text-gray-900">{{ pattern.title }}</h1>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+                <a href="/category/{{ pattern.category.id }}" class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                    {{ pattern.category.name }}
+                </a>
+                {% for t in pattern.tags.split(',') if t.strip() %}
+                <a href="/category/{{ pattern.category.id }}?tag={{ t.strip() }}" class="inline-block text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">{{ t.strip() }}</a>
+                {% endfor %}
+                <span class="text-xs text-gray-400">{{ pattern.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </div>
+        </header>
+        <hr class="mb-5 border-gray-100">
+        <div id="md-content" class="markdown-body"></div>
+    </article>
+</div>
+
+<script id="raw-md" type="text/plain">{{ pattern.content }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        marked.setOptions({ breaks: true, gfm: true });
+        var raw = document.getElementById('raw-md').textContent;
+        var rendered = DOMPurify.sanitize(marked.parse(raw), { ADD_TAGS: ['pre','code','span'], ADD_ATTR: ['class'] });
+        document.getElementById('md-content').innerHTML = rendered;
+        document.querySelectorAll('#md-content pre code').forEach(function(b) { hljs.highlightElement(b); });
+    });
+</script>
+{% endblock %}

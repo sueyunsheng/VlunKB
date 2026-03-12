@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - VulnKB{% endblock %}
+
+{% block content %}
+<!-- 面包屑 + 操作栏 -->
+<div class="flex items-center justify-between mb-4">
+    <nav class="flex items-center text-sm text-gray-500 space-x-2">
+        <a href="/" class="hover:text-indigo-600 transition">首页</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <span class="text-gray-800 font-medium">{{ category.name }}</span>
+    </nav>
+    <div class="flex items-center gap-2">
+        <a href="/category/{{ category.id }}/pattern/new"
+           class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-md transition">+ 新建条目</a>
+        <a href="/category/{{ category.id }}/edit"
+           class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-md transition">编辑目录</a>
+    </div>
+</div>
+
+{% if category.description %}
+<p class="text-sm text-gray-500 mb-4">{{ category.description }}</p>
+{% endif %}
+
+<div class="flex flex-col lg:flex-row gap-5">
+    {% if all_tags|length > 0 %}
+    <aside class="lg:w-44 shrink-0">
+        <div class="bg-white rounded-xl shadow-sm p-3">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">标签</h3>
+            <div class="flex flex-wrap gap-1.5">
+                {% if tag %}
+                <a href="/category/{{ category.id }}?q={{ q }}" class="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition">全部</a>
+                {% endif %}
+                {% for t in all_tags %}
+                <a href="/category/{{ category.id }}?tag={{ t }}&q={{ q }}"
+                   class="inline-block text-xs px-2 py-0.5 rounded-full transition {% if t == tag %}bg-indigo-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-indigo-50{% endif %}">{{ t }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+    {% endif %}
+
+    <div class="flex-1">
+        <form method="GET" action="/category/{{ category.id }}" class="mb-4">
+            <div class="flex gap-2">
+                <input type="text" name="q" value="{{ q }}" placeholder="搜索条目标题..."
+                       class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                {% if tag %}<input type="hidden" name="tag" value="{{ tag }}">{% endif %}
+                <button type="submit" class="px-4 py-1.5 bg-slate-800 text-white text-sm rounded-lg hover:bg-slate-700 transition shadow-sm">搜索</button>
+            </div>
+        </form>
+
+        {% if patterns|length == 0 %}
+        <div class="text-center py-14">
+            <p class="text-gray-400 text-sm">该目录下暂无条目</p>
+            <a href="/category/{{ category.id }}/pattern/new" class="inline-block mt-3 text-sm text-indigo-600 hover:text-indigo-500 font-medium">创建第一个条目 &rarr;</a>
+        </div>
+        {% else %}
+        <div class="grid gap-2.5">
+            {% for p in patterns %}
+            <a href="/pattern/{{ p.id }}" class="block bg-white rounded-lg shadow-sm hover:shadow-md transition p-3.5 border border-transparent hover:border-indigo-200">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-sm font-semibold text-gray-800 truncate">{{ p.title }}</h2>
+                        <div class="flex flex-wrap gap-1 mt-1.5">
+                            {% for t in p.tags.split(',') if t.strip() %}
+                            <span class="inline-block text-xs px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">{{ t.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <time class="text-xs text-gray-400 whitespace-nowrap ml-3">{{ p.updated_at.strftime('%Y-%m-%d') }}</time>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if pattern %}编辑 - {{ pattern.title }}{% else %}新建条目{% endif %} - VulnKB
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .editor-wrap { display: flex; height: calc(100vh - 48px - 52px); }
+    .editor-left, .editor-right { flex: 1; overflow-y: auto; }
+    .editor-left { border-right: 1px solid #e5e7eb; }
+    .editor-textarea {
+        width: 100%; height: 100%; padding: 1rem 1.25rem; border: none; outline: none;
+        font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.875rem; line-height: 1.7; resize: none; background: #fafafa;
+    }
+    .editor-textarea:focus { background: #fff; }
+    .toolbar-btn {
+        padding: 4px 8px; border-radius: 4px; font-size: 13px; color: #475569;
+        cursor: pointer; transition: all 0.15s; border: none; background: transparent;
+        display: inline-flex; align-items: center; justify-content: center; min-width: 32px;
+    }
+    .toolbar-btn:hover { background: #e2e8f0; color: #1e293b; }
+    .toolbar-sep { width: 1px; height: 20px; background: #e2e8f0; margin: 0 4px; display: inline-block; vertical-align: middle; }
+</style>
+{% endblock %}
+
+{% block body_layout %}
+<div class="flex-1 overflow-hidden">
+<form method="POST" id="editor-form"
+      action="{% if pattern %}/pattern/{{ pattern.id }}/edit{% else %}/category/{{ category.id }}/pattern/new{% endif %}"
+      class="flex flex-col" style="height: calc(100vh - 48px);">
+
+    <!-- 顶栏：标题 / 标签 / 目录选择 / 操作按钮 -->
+    <div class="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 shrink-0 flex-wrap">
+        <input type="text" name="title" required
+               value="{{ pattern.title if pattern else '' }}"
+               placeholder="输入标题..."
+               class="flex-1 min-w-[200px] px-3 py-1.5 border border-gray-300 rounded-lg text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+
+        <input type="text" name="tags"
+               value="{{ pattern.tags if pattern else '' }}"
+               placeholder="标签（逗号分隔）"
+               class="w-48 px-3 py-1.5 border border-gray-300 rounded-lg text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+
+        <select name="category_id"
+                class="w-40 px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}"
+                    {% if (pattern and pattern.category_id == cat.id) or (not pattern and category.id == cat.id) %}selected{% endif %}>
+                {{ cat.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <a href="{% if pattern %}/pattern/{{ pattern.id }}{% else %}/category/{{ category.id }}{% endif %}"
+           class="px-4 py-1.5 text-sm text-gray-600 hover:text-gray-800 transition">取消</a>
+        <button type="submit"
+                class="px-5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition shadow-sm">
+            {% if pattern %}保存{% else %}创建{% endif %}
+        </button>
+    </div>
+
+    <!-- Markdown 工具栏 -->
+    <div class="bg-white border-b border-gray-100 px-4 py-1.5 shrink-0 flex items-center gap-0.5 overflow-x-auto">
+        <button type="button" class="toolbar-btn" data-action="bold" title="粗体 (Ctrl+B)"><b>B</b></button>
+        <button type="button" class="toolbar-btn" data-action="italic" title="斜体 (Ctrl+I)"><i>I</i></button>
+        <button type="button" class="toolbar-btn" data-action="strikethrough" title="删除线"><s>S</s></button>
+        <span class="toolbar-sep"></span>
+        <button type="button" class="toolbar-btn" data-action="h1" title="一级标题">H1</button>
+        <button type="button" class="toolbar-btn" data-action="h2" title="二级标题">H2</button>
+        <button type="button" class="toolbar-btn" data-action="h3" title="三级标题">H3</button>
+        <span class="toolbar-sep"></span>
+        <button type="button" class="toolbar-btn" data-action="ul" title="无序列表">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <button type="button" class="toolbar-btn" data-action="ol" title="有序列表">1.</button>
+        <button type="button" class="toolbar-btn" data-action="quote" title="引用块">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        </button>
+        <span class="toolbar-sep"></span>
+        <button type="button" class="toolbar-btn" data-action="code" title="行内代码">&lt;/&gt;</button>
+        <button type="button" class="toolbar-btn" data-action="codeblock" title="代码块">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        </button>
+        <span class="toolbar-sep"></span>
+        <button type="button" class="toolbar-btn" data-action="link" title="链接">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        </button>
+        <button type="button" class="toolbar-btn" data-action="table" title="表格">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18"/></svg>
+        </button>
+        <button type="button" class="toolbar-btn" data-action="hr" title="分割线">—</button>
+    </div>
+
+    <!-- 分栏编辑器：左编辑 / 右预览 -->
+    <div class="editor-wrap flex-1">
+        <div class="editor-left">
+            <textarea id="md-editor" name="content" class="editor-textarea"
+                      placeholder="在此输入 Markdown 内容...">{{ pattern.content if pattern else '' }}</textarea>
+        </div>
+        <div class="editor-right bg-white px-6 py-4">
+            <div class="text-xs text-gray-400 mb-3 uppercase tracking-wider font-semibold">实时预览</div>
+            <div id="md-preview" class="markdown-body text-sm"></div>
+        </div>
+    </div>
+</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var editor = document.getElementById('md-editor');
+    var preview = document.getElementById('md-preview');
+
+    marked.setOptions({ breaks: true, gfm: true });
+
+    // ---- 实时同步预览 ----
+    function renderPreview() {
+        var html = DOMPurify.sanitize(marked.parse(editor.value), {
+            ADD_TAGS: ['pre', 'code', 'span'],
+            ADD_ATTR: ['class'],
+        });
+        preview.innerHTML = html;
+        preview.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+    }
+
+    editor.addEventListener('input', renderPreview);
+    renderPreview();
+
+    // ---- 工具栏操作 ----
+    var actions = {
+        bold:          { before: '**', after: '**', placeholder: '粗体文本' },
+        italic:        { before: '*', after: '*', placeholder: '斜体文本' },
+        strikethrough: { before: '~~', after: '~~', placeholder: '删除线文本' },
+        h1:            { before: '# ', after: '', placeholder: '一级标题', line: true },
+        h2:            { before: '## ', after: '', placeholder: '二级标题', line: true },
+        h3:            { before: '### ', after: '', placeholder: '三级标题', line: true },
+        ul:            { before: '- ', after: '', placeholder: '列表项', line: true },
+        ol:            { before: '1. ', after: '', placeholder: '列表项', line: true },
+        quote:         { before: '> ', after: '', placeholder: '引用文本', line: true },
+        code:          { before: '`', after: '`', placeholder: 'code' },
+        codeblock:     { before: '```\n', after: '\n```', placeholder: '// 代码', line: true },
+        link:          { before: '[', after: '](url)', placeholder: '链接文本' },
+        hr:            { before: '\n---\n', after: '', placeholder: '', line: true },
+        table:         { before: '\n| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n| ', after: ' |  |  |\n', placeholder: '内容', line: true },
+    };
+
+    document.querySelectorAll('.toolbar-btn[data-action]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var act = actions[this.dataset.action];
+            if (!act) return;
+
+            editor.focus();
+            var start = editor.selectionStart;
+            var end = editor.selectionEnd;
+            var text = editor.value;
+            var selected = text.substring(start, end) || act.placeholder;
+
+            var prefix = act.line && start > 0 && text[start - 1] !== '\n' ? '\n' : '';
+            var insert = prefix + act.before + selected + act.after;
+
+            editor.setRangeText(insert, start, end, 'select');
+
+            var newCursorPos = start + prefix.length + act.before.length;
+            editor.setSelectionRange(newCursorPos, newCursorPos + selected.length);
+
+            editor.dispatchEvent(new Event('input'));
+        });
+    });
+
+    // ---- 键盘快捷键 ----
+    editor.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+            e.preventDefault();
+            document.querySelector('[data-action="bold"]').click();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+            e.preventDefault();
+            document.querySelector('[data-action="italic"]').click();
+        }
+        // Tab 键插入空格而不是切换焦点
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            var s = this.selectionStart;
+            this.setRangeText('    ', s, s, 'end');
+            this.dispatchEvent(new Event('input'));
+        }
+    });
+})();
+</script>
+{% endblock %}

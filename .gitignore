@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# 环境变量（含密码和密钥）
+.env
+
+# SQLite 数据库
+*.db
+
+# SSL 证书（由 gen-cert.sh 生成）
+nginx/ssl/*.crt
+nginx/ssl/*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker 持久化数据
+data/vulnkb.db
+
+# Cursor
+.cursor/

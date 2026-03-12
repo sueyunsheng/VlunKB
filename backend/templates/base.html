@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VulnKB{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <style>
+        .markdown-body h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5rem 0 0.75rem; padding-bottom: 0.3rem; border-bottom: 1px solid #e5e7eb; }
+        .markdown-body h2 { font-size: 1.4rem; font-weight: 600; margin: 1.25rem 0 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid #f3f4f6; }
+        .markdown-body h3 { font-size: 1.15rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+        .markdown-body h4 { font-size: 1.05rem; font-weight: 600; margin: 0.75rem 0 0.4rem; }
+        .markdown-body p { margin: 0.6rem 0; line-height: 1.75; }
+        .markdown-body ul, .markdown-body ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+        .markdown-body ul { list-style-type: disc; }
+        .markdown-body ol { list-style-type: decimal; }
+        .markdown-body li { margin: 0.25rem 0; }
+        .markdown-body code { background: #1e293b; color: #e2e8f0; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.875rem; }
+        .markdown-body pre { background: #0f172a; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.75rem 0; }
+        .markdown-body pre code { background: transparent; padding: 0; }
+        .markdown-body blockquote { border-left: 4px solid #6366f1; padding: 0.5rem 1rem; margin: 0.75rem 0; background: #f8fafc; color: #475569; }
+        .markdown-body a { color: #6366f1; text-decoration: underline; }
+        .markdown-body table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; }
+        .markdown-body th, .markdown-body td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+        .markdown-body th { background: #f1f5f9; font-weight: 600; }
+        .markdown-body img { max-width: 100%; border-radius: 0.5rem; }
+        .markdown-body hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5rem 0; }
+
+        /* 侧边栏 */
+        .sidebar { width: 260px; transition: margin-left 0.2s ease; }
+        .sidebar.collapsed { margin-left: -260px; }
+        .sidebar-item:hover { background: #f1f5f9; }
+        .sidebar-item.active { background: #eef2ff; color: #4338ca; font-weight: 600; }
+        .sidebar-cat-toggle { cursor: pointer; user-select: none; }
+        .sidebar-cat-toggle:hover { background: #f1f5f9; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-gray-50 text-gray-800 flex flex-col">
+
+    {% block navbar %}
+    {% if user is defined and user %}
+    <nav class="bg-slate-900 text-white shadow-lg shrink-0 z-30">
+        <div class="px-4">
+            <div class="flex items-center justify-between h-12">
+                <div class="flex items-center space-x-3">
+                    <!-- 侧边栏切换按钮 -->
+                    <button id="sidebar-toggle" class="text-gray-400 hover:text-white transition p-1 rounded" title="切换侧边栏">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <a href="/" class="flex items-center space-x-2 font-bold text-base tracking-wide">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span>VulnKB</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="/category/new" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1 rounded transition">+ 目录</a>
+                    <a href="/data-manage" class="text-gray-400 hover:text-white text-xs transition" title="数据管理">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </a>
+                    <span class="text-gray-400 text-xs">{{ user.username }}</span>
+                    <a href="/logout" class="text-gray-500 hover:text-white text-xs transition">登出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    {% endblock %}
+
+    {% block body_layout %}
+    {% if user is defined and user %}
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 左侧边栏 -->
+        <aside id="sidebar" class="sidebar bg-white border-r border-gray-200 flex flex-col shrink-0 overflow-hidden">
+            <div class="flex-1 overflow-y-auto" id="sidebar-tree">
+                <div class="px-3 py-3 text-xs text-gray-400 text-center">加载中...</div>
+            </div>
+        </aside>
+
+        <!-- 右侧主内容 -->
+        <div class="flex-1 overflow-y-auto">
+            <main class="{% block main_class %}max-w-6xl mx-auto px-4 sm:px-6 py-5{% endblock %}">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
+    <main class="flex-1">
+        {% block content_nosidebar %}{% endblock %}
+    </main>
+    {% endif %}
+    {% endblock %}
+
+    {% block scripts %}{% endblock %}
+
+    {% if user is defined and user %}
+    <script>
+    (function() {
+        var sidebar = document.getElementById('sidebar');
+        var toggle = document.getElementById('sidebar-toggle');
+        var KEY = 'vulnkb_sidebar';
+
+        if (localStorage.getItem(KEY) === 'collapsed') {
+            sidebar.classList.add('collapsed');
+        }
+
+        if (toggle) {
+            toggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem(KEY, sidebar.classList.contains('collapsed') ? 'collapsed' : 'open');
+            });
+        }
+
+        // 加载侧边栏目录树
+        function loadSidebar() {
+            fetch('/api/sidebar').then(function(r) { return r.json(); }).then(function(cats) {
+                var tree = document.getElementById('sidebar-tree');
+                if (!cats.length) {
+                    tree.innerHTML = '<div class="px-3 py-6 text-xs text-gray-400 text-center">暂无目录</div>';
+                    return;
+                }
+
+                var currentPath = window.location.pathname;
+                var html = '';
+
+                cats.forEach(function(cat) {
+                    var catActive = currentPath === '/category/' + cat.id;
+                    var anyChildActive = cat.patterns.some(function(p) { return currentPath === '/pattern/' + p.id; });
+                    var isOpen = catActive || anyChildActive;
+
+                    html += '<div class="sidebar-cat" data-cat-id="' + cat.id + '">';
+                    html += '<div class="sidebar-cat-toggle flex items-center justify-between px-3 py-2 text-sm ' + (catActive ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-700') + '">';
+                    html += '<a href="/category/' + cat.id + '" class="flex items-center gap-2 flex-1 min-w-0">';
+                    html += '<svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>';
+                    html += '<span class="truncate">' + cat.name + '</span>';
+                    html += '</a>';
+                    html += '<button class="cat-expand shrink-0 p-0.5 text-gray-400 hover:text-gray-600" data-cat="' + cat.id + '">';
+                    html += '<svg class="w-3.5 h-3.5 transition-transform ' + (isOpen ? 'rotate-90' : '') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+                    html += '</button>';
+                    html += '</div>';
+
+                    html += '<div class="cat-children ' + (isOpen ? '' : 'hidden') + '">';
+                    cat.patterns.forEach(function(p) {
+                        var pActive = currentPath === '/pattern/' + p.id;
+                        html += '<a href="/pattern/' + p.id + '" class="sidebar-item block pl-9 pr-3 py-1.5 text-xs truncate ' + (pActive ? 'active' : 'text-gray-600') + '">';
+                        html += p.title;
+                        html += '</a>';
+                    });
+                    if (!cat.patterns.length) {
+                        html += '<div class="pl-9 pr-3 py-1.5 text-xs text-gray-400">暂无条目</div>';
+                    }
+                    html += '</div></div>';
+                });
+
+                tree.innerHTML = html;
+
+                // 目录折叠/展开
+                tree.querySelectorAll('.cat-expand').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var catDiv = this.closest('.sidebar-cat');
+                        var children = catDiv.querySelector('.cat-children');
+                        var arrow = this.querySelector('svg');
+                        children.classList.toggle('hidden');
+                        arrow.classList.toggle('rotate-90');
+                    });
+                });
+            });
+        }
+
+        loadSidebar();
+    })();
+    </script>
+    {% endif %}
+</body>
+</html>
